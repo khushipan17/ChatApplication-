@@ -10,10 +10,14 @@ require('./bootstrap');
 
 
 import Axios from 'axios';
-import Vue from 'vue'
+import Vue from 'vue';
 
  
-import VueChatScroll from 'vue-chat-scroll'
+import Toaster from 'v-toaster';
+Vue.use(Toaster, {timeout: 5000});
+import VueChatScroll from 'vue-chat-scroll';
+import 'v-toaster/dist/v-toaster.css';
+
 
 Vue.use(VueChatScroll)
 
@@ -42,7 +46,8 @@ const app = new Vue({
             time:[]
            
         },
-        typing : ''
+        typing : '',
+        numberofusers : 0
 
     },
     
@@ -126,6 +131,23 @@ const app = new Vue({
          this.typing = 'typing...';
       }
       else{ this.typing = '';}
+        
+    })
+
+    Echo.join(`chat`)
+    .here((users) => {
+       //console.log(users);
+       this.numberofusers = users.length;
+     
+    })
+    .joining((user) => {
+      this.numberofusers += 1;
+      this.$toaster.success(user.name+'  joined chat room.')
+       
+    })
+    .leaving((user) => {
+       this.numberofusers -= 1;
+       this.$toaster.warning(user.name+ ' leaved chat room')
         
     });
        
