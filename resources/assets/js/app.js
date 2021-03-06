@@ -10,10 +10,14 @@ require('./bootstrap');
 
 
 import Axios from 'axios';
-import Vue from 'vue'
+import Vue from 'vue';
 
  
-import VueChatScroll from 'vue-chat-scroll'
+import Toaster from 'v-toaster';
+Vue.use(Toaster, {timeout: 5000});
+import VueChatScroll from 'vue-chat-scroll';
+import 'v-toaster/dist/v-toaster.css';
+
 
 Vue.use(VueChatScroll)
 
@@ -37,17 +41,35 @@ const app = new Vue({
 
         chat: {
             message : [],
-            user : []
-        }
+            user : [],
+            color:[],
+            time:[]
+           
+        },
+        typing : '',
+        numberofusers : 0
 
     },
     
+    watch:{
+           message(){
+
+            Echo.private('chat')
+            .whisper('typing', {
+                message: this.message
+            });
+           }
+
+    },
 
     methods: {
 
       send(){
     		if (this.message.length != 0) {
           this.chat.message.push(this.message);
+          this.chat.user.push('you');
+          this.chat.color.push('success');
+          this.chat.time.push(this.getTime());
        
 
           Axios.post('/send' ,{
@@ -60,7 +82,25 @@ const app = new Vue({
     		
     		
         }
+      },
+      getTime(){
+
+          let time = new Date(); 
+          let hours = time.getHours();
+          let minutes = time.getMinutes();
+         let ampm = hours >= 12 ? 'pm' : 'am';
+           hours = hours % 12;
+           hours = hours ? hours : 12; // the hour '0' should be '12'
+           minutes = minutes < 10 ? '0'+minutes : minutes;
+            this.time = hours + ':' + minutes + ' ' + ampm;
+           return this.time;
+
+          console.log("this method called");
+             
+             
       }
+
+
     },
     	
     mounted(){
@@ -69,6 +109,9 @@ const app = new Vue({
             //console.log(e.message);
 
             this.chat.message.push(e.message);
+            this.chat.user.push(e.user);
+            this.chat.color.push('warning');
+            this.chat.time.push(this.getTime());
 
              //console.log(e);
               
@@ -79,7 +122,34 @@ const app = new Vue({
             
             
             
-            }); 
+            })
+
+          
+    .listenForWhisper('typing', (e) => {
+      if(e.message != ''){
+        
+         this.typing = 'typing...';
+      }
+      else{ this.typing = '';}
+        
+    })
+
+    Echo.join(`chat`)
+    .here((users) => {
+       //console.log(users);
+       this.numberofusers = users.length;
+     
+    })
+    .joining((user) => {
+      this.numberofusers += 1;
+      this.$toaster.success(user.name+'  joined chat room.')
+       
+    })
+    .leaving((user) => {
+       this.numberofusers -= 1;
+       this.$toaster.warning(user.name+ ' leaved chat room')
+        
+    });
        
 
     }

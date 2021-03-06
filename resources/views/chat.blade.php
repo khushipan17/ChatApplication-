@@ -21,14 +21,17 @@
             <div class="row" id = "app">
 
                  
-             <div class="offset-4 col-4">
+             <div class="offset-4 col-4 offset-sm-1 col-sm-6">
 
 
                 <ul class="list-group ">
-                    <li  class="list-group-item active"> Chat Room </li>
-                    <message  v-for= "value in chat.message"
+                    <li  class="list-group-item active"> Chat Room  <span class="badge  badge-pill badge-danger">@{{ numberofusers }}</span> </li>
+                <div class="badge badge-pill badge-primary"  > @{{ typing}}</div>
+                    <message  v-for= "value,index in chat.message"
                     :key = value.index
-                    color = "warning">
+                    :color = chat.color[index]
+                    :user = chat.user[index]
+                    :time = chat.time[index]                    >
 
                         @{{ value}}
                     </message>
